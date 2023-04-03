@@ -1,0 +1,30 @@
+{% extends 'links/base.html' %}{% load static %}{% block title %}Различные сервисы{% endblock %}{% block content %}
+<div class="container">
+    <div class="card-deck">
+        <div class="card">
+            <img class="card-img-top" src="{% static 'img/email.jpg' %}" alt="Сокращение ссылок в Email-рассылках">
+            <div class="card-body">
+                <h5 class="card-title">Сокращение ссылок</h5>
+                <p class="card-text">Сервис по замене ссылок в Email-рассылках</p>
+                <a href="{% url 'upload_mailing' %}" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+        <div class="card">
+            <img class="card-img-top" src="{% static 'img/simkarta.jpg' %}" alt="Заявление для симкарты">
+            <div class="card-body">
+                <h5 class="card-title">Заявление для сим-карты</h5>
+                <p class="card-text">Сервис по формированию заявления на Корпоративную симкарту</p>
+                <a href="{% url 'simkarta' %}" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+        <div class="card">
+            <img class="card-img-top" src="{% static 'img/future.png' %}" heigh="362px" width="200px" alt="Card image cap">
+            <div class="card-body">
+                <h5 class="card-title">Будущий сервис</h5>
+                <p class="card-text">Еще один сервис для внутренного пользования сотрудниками</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

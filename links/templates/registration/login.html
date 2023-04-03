@@ -1,0 +1,7 @@
+{% extends 'links/base.html' %}{% load crispy_forms_tags %} &nbsp;{% block auth %}
+<h2>Вход в систему</h2>
+<form method="post">
+    {% csrf_token %} {{ form|crispy }}
+    <button type="submit">Войти</button>
+</form>
+{% endblock auth %}

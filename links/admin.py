@@ -3,4 +3,6 @@ from .models import Mailing
 
 # Register your models here.
 
-admin.site.register(Mailing)
+@admin.register(Mailing)
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ("el_tag", "author", "created_at")

@@ -3,3 +3,5 @@ crispy-bootstrap5==0.7
 django-crispy-forms==2.0
 yourls==1.2.3
 environs==9.5.0
+docxtpl==0.16.6
+transliterate==1.10.2

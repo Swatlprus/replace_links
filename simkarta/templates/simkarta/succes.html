@@ -1,0 +1,16 @@
+{% extends 'simkarta/base.html' %} {% load crispy_forms_tags %}{% block title %}Заявления для симкарты{% endblock %} {% block content %} {% if filename %}
+<div class="alert alert-success" role="alert">
+    <h3>Файл готов для скачивания</h3>
+    <a class="btn btn-primary" href="{% url 'simkarta_download' filename %}" role="button">Скачать файл</a>
+</div>
+{% endif %} {% if message_log %}
+<div class="alert alert-success" role="alert">
+    <h3>Информационные сообщения</h3>
+    {% for item in message_log %} {{ item }} {% endfor %}
+</div>
+{% endif %} {% if error_log %}
+<div class="alert alert-danger" role="alert">
+    <h3>Ошибка</h3>
+    {% for error in error_log %} {{ error }} {% endfor %}
+</div>
+{% endif %}{% endblock %}

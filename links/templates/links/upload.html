@@ -1,0 +1,9 @@
+{% extends 'links/base.html' %} {% load crispy_forms_tags %}{% block title %}Замена ссылок в рассылке{% endblock %} {% block content %}
+<h3>Сервис по замене ссылок в рассылках</h3>
+<form method="post" , enctype="multipart/form-data">
+    {% csrf_token %} {{ form|crispy }}
+    <button type="submit" class="btn btn-primary">Отправить</button>
+    <button type="reset" class="btn btn-warning">Очистить поле файл</button>
+
+</form>
+{% endblock %}

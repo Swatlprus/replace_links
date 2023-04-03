@@ -1,0 +1,44 @@
+{% extends 'links/base.html' %} {% load crispy_forms_tags %}{% block title %}Замена ссылок в рассылке{% endblock %} {% block content %} {% if filename %}
+<div class="alert alert-success" role="alert">
+    <h3>Файл готов для скачивания</h3>
+    <a class="btn btn-primary" href="{% url 'download' filename %}" role="button">Скачать файл</a>
+</div>
+{% endif %} {% if message_log %}
+<div class="alert alert-success" role="alert">
+    <h3>Информационные сообщения</h3>
+    {% for item in message_log %} {{ item }} {% endfor %}
+</div>
+{% endif %} {% if error_log %}
+<div class="alert alert-danger" role="alert">
+    <h3>Ошибка</h3>
+    {% for error in error_log %} {{ error }} {% endfor %}
+</div>
+{% endif %} {% if links_with_utm %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Номер</th>
+            <th scope="col">Ссылки которые есть в письме</th>
+            <th scope="col">Сокращенные ссылки</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for link, link_utm in links_with_utm.items %}
+        <tr>
+            <td>{{ forloop.counter }} </td>
+            <td>{{ link }}</td>
+            <td>{{ link_utm }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% if google_url %}
+    <tbody>
+        <tr>
+            <td>Google</td>
+            <td>{{ google_url }}</td>
+            <td>{{ short_google_url }}</td>
+        </tr>
+    </tbody>
+    {% endif %}
+</table>
+{% endif %} {% endblock %}

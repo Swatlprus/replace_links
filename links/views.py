@@ -1,15 +1,25 @@
 import re
 import os
 import datetime
-import time
-from pathlib import Path
 from environs import Env
-from django.http import Http404, HttpResponse
-from django.shortcuts import redirect, render
+from pathlib import Path
 from .forms import MailingForm
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.http import HttpResponse
 from yourls import YOURLSClient, YOURLSKeywordExistsError, YOURLSNoLoopError
+
+
+def home(request):
+    return render(request, 'links/home.html')
+
+
+def download(request, filename):
+    filepath = os.path.join(settings.MEDIA_ROOT, 'html', filename)
+    with open(filepath, 'rb') as fh:
+        response = HttpResponse(fh.read(), content_type="application/html")
+        response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
+        return response
 
 
 def check_links(el_tag, field_name, yourls_token):
@@ -23,28 +33,36 @@ def check_links(el_tag, field_name, yourls_token):
         code_letter = file_handler.read()
 
     links = []
+    error_log = []
     stop_links = ['http://www.w3.org/TR/REC-html40', 'http://schemas.microsoft.com/office/2004/12/omml',
                     'https://l.ertelecom.ru/vkdigest', 'https://l.ertelecom.ru/tgdigest',
                     'https://l.ertelecom.ru/220415digestrutube']
     
     
     # Находим все ссылки в исходном коде
+    pixels = True
     source_links = re.findall(r'(https?://\S+")', code_letter)
     for source_link in source_links:
         source_link = source_link.replace('"', '')
-        if source_link not in stop_links:
-            links.append(source_link)
+        google_pixel = re.findall(r'(https:\/\/l.ertelecom.ru\/\S*pixel\S*)', source_link)
+        if len(google_pixel) == 1:
+            code_letter = code_letter.replace(google_pixel[0], '')
+        elif len(google_pixel) > 1:
+            pixels = False
+            error_log.append('В коде письма найдены два и более ссылок Google Pixel.')
+        else:
+            if source_link not in stop_links:
+                links.append(source_link)
 
 
     # Оставляем только уникальные ссылки
     links = sorted(set(links), key=links.index)
-    message_log = []
 
+    links_with_utm = {}
     if len(links) == 0:
-        message_log.append('В коде письма ссылки не найдены.')
+        error_log.append('В коде письма ссылки не найдены.')
         status_yourls = False
     else:
-        links_with_utm = {}
         for count, link in enumerate(links, start=1):
             yourls = YOURLSClient('http://l.ertelecom.ru/yourls-api.php', signature=yourls_token)
             status_yourls = True
@@ -53,11 +71,11 @@ def check_links(el_tag, field_name, yourls_token):
                 links_with_utm[link] = yourls_link.shorturl
             except YOURLSKeywordExistsError:
                 status_yourls = False
-                message_log.append('Короткий адрес уже используется или зарезервирован.')
+                error_log.append('Короткий адрес уже используется или зарезервирован.')
             except YOURLSNoLoopError:
                 status_yourls = False
-                message_log.append('В письме есть ссылки, которые уже сокращены.')
-    context = [status_yourls, code_letter, links_with_utm, message_log]
+                error_log.append('В письме есть ссылки, которые уже сокращены.')
+    context = [status_yourls, code_letter, links, links_with_utm, error_log, pixels]
     return context
 
 
@@ -93,27 +111,22 @@ def work_links(code_letter, links_with_utm, google_tag, event, cn_tag, cs_tag, e
     # Вставляем результат в новый файл
     now = datetime.datetime.now()
     name_with_date = now.strftime("%d.%m.%Y_%H-%M-%S")
-    filepath = os.path.join(settings.MEDIA_ROOT, 'html', f'email_{name_with_date}.html')
+    filename = f'email_{name_with_date}.html'
+    filepath = os.path.join(settings.MEDIA_ROOT, 'html', filename)
     folder_html = os.path.join(settings.MEDIA_ROOT, 'html')
     Path(folder_html).mkdir(parents=True, exist_ok=True)
-    with open(filepath, "w+", encoding='utf-8') as file:
+
+    with open(filepath, "w+", encoding='cp1251') as file:
         file.write(code_letter_utm)
         file.close()
 
-    message_log.append('Файл обработан. Он сохранится в новом файле.')
-    print('Файл обработан. Он сохранится в новом файле.')
-
-    if os.path.exists(filepath):
-        with open(filepath, 'rb') as fh:
-            response = HttpResponse(fh.read(), content_type="application/html")
-            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
-            return render(response, 'download.html')
-    else:
-        return redirect('/error/')
+    message_log.append('Файл обработан успешно')
+    context = [filename, message_log, google_url, short_google_url.shorturl]
+    return context
     
 
-def download(request, file1):
-    return render(request, 'download.html', {'file1': file1})
+def succes(request):
+    return render(request, 'links/succes.html')
 
 
 def upload_mailing(request):
@@ -125,22 +138,31 @@ def upload_mailing(request):
             env = Env()
             env.read_env()
             yourls_token = env("YOURLS_TOKEN")
-            print(f'yourls_token: {yourls_token}')
 
             el_tag = form.cleaned_data['el_tag']
             field_name = form.cleaned_data['field_name']
 
-            status_yourls, code_letter, links_with_utm, message_log = check_links(el_tag, field_name, yourls_token)
-            if status_yourls:
+            status_yourls, code_letter, links, links_with_utm, error_log, pixels = check_links(el_tag, field_name, yourls_token)
+            if (status_yourls and pixels):
                 google_tag = form.cleaned_data['google_tag']
                 event = form.cleaned_data['event']
                 cn_tag = form.cleaned_data['cn_tag']
                 cs_tag = form.cleaned_data['cs_tag']
                 ec_tag = form.cleaned_data['ec_tag']
                 ea_tag = form.cleaned_data['ea_tag']
-                work_links(code_letter, links_with_utm, google_tag, event, cn_tag, cs_tag, ec_tag, ea_tag, el_tag, yourls_token)
+                filename, message_log, google_url, short_google_url = work_links(code_letter, links_with_utm, google_tag, event, cn_tag, cs_tag, ec_tag, ea_tag, el_tag, yourls_token)
+
+                filepath = os.path.join(settings.MEDIA_ROOT, 'html', filename)
+                if os.path.exists(filepath):
+                    return render(request, 'links/succes.html', {'filename': filename, 'message_log': message_log, 
+                                                           'error_log': error_log, 'links': links, 
+                                                           'links_with_utm': links_with_utm, 'google_url': google_url, 
+                                                           'short_google_url': short_google_url})
+                else:
+                     error_log = 'Ошибка. Мы не нашли сгенерированный файл'
+                     return render(request, 'links/succes.html', {'message_log': message_log, 'error_log': error_log})
             else:
-                return render(request, 'download.html', {'message_log': message_log})
+                return render(request, 'links/succes.html', {'error_log': error_log})
     else:
         form = MailingForm
-    return render(request, 'upload.html', {'form':form})
+    return render(request, 'links/mailing.html', {'form':form})
