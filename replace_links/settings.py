@@ -18,6 +18,11 @@ from pathlib import Path
 env = Env()
 env.read_env()
 
+YOURLS_TOKEN = env('YOURLS_TOKEN')
+STOP_LINKS = env('STOP_LINKS')
+JIRA_LOGIN = env('JIRA_LOGIN')
+JIRA_PASSWORD = env('JIRA_PASSWORD')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,12 +31,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env('ALLOWED_HOSTS', ['.localhost', '127.0.0.1', '[::1]'])
 
 
 # Application definition
@@ -44,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'links',
-    'simkarta',
+    'simcards',
     'crispy_bootstrap5',
     'crispy_forms',
 ]

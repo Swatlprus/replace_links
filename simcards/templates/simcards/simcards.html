@@ -1,6 +1,7 @@
-{% extends 'simkarta/base.html' %}{% load crispy_forms_tags %}{% block title %}Заявления для симкарты{% endblock %} {% block content %}
+{% extends 'simcards/base.html' %} {% load crispy_forms_tags %} {% block title %}Заявления для симкарты{% endblock %} {% block content %}
 <h4>Сервис по формированию заявления для выдачи Корпоративной сим-карты</h4>
 <form method="post" novalidate>
     {% csrf_token %} {{ form|crispy }}
     <button type="submit" class="btn btn-primary">Отправить</button>
-</form>{% endblock %}
+</form>
+{% endblock %}

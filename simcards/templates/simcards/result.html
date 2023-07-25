@@ -1,7 +1,8 @@
-{% extends 'simkarta/base.html' %} {% load crispy_forms_tags %}{% block title %}Заявления для симкарты{% endblock %} {% block content %} {% if filename %}
+{% extends 'simcards/base.html' %} {% load crispy_forms_tags %}{% block title %}Заявления для симкарты{% endblock %} {% block content %} {% if filename %}
 <div class="alert alert-success" role="alert">
     <h3>Файл готов для скачивания</h3>
-    <a class="btn btn-primary" href="{% url 'simkarta_download' filename %}" role="button">Скачать файл</a>
+    <a class="btn btn-primary" href="{% url 'download_docx' filename %}" target="_blank" role="button">Скачать файл</a>
+    <a class="btn btn-primary" href="{% url 'application_generation' %}" role="button">Сгенерировать еще</a>
 </div>
 {% endif %} {% if message_log %}
 <div class="alert alert-success" role="alert">
